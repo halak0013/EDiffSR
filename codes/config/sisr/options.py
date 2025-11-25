@@ -19,10 +19,19 @@ Loader, Dumper = OrderedYaml()
 def parse(opt_path, is_train=True):
     with open(opt_path, mode="r") as f:
         opt = yaml.load(f, Loader=Loader)
+
+    # Calculate root path early
+    opt["path"]["root"] = osp.abspath(
+        osp.join(__file__, osp.pardir, osp.pardir, osp.pardir, osp.pardir)
+    )
+
     # export CUDA_VISIBLE_DEVICES
-    gpu_list = ",".join(str(x) for x in opt["gpu_ids"])
-    os.environ["CUDA_VISIBLE_DEVICES"] = gpu_list
-    print("export CUDA_VISIBLE_DEVICES=" + gpu_list)
+    if opt["gpu_ids"] is not None:
+        gpu_list = ",".join(str(x) for x in opt["gpu_ids"])
+        os.environ["CUDA_VISIBLE_DEVICES"] = gpu_list
+        print("export CUDA_VISIBLE_DEVICES=" + gpu_list)
+    else:
+        print("export CUDA_VISIBLE_DEVICES=")
 
     opt["is_train"] = is_train
 
@@ -44,12 +53,16 @@ def parse(opt_path, is_train=True):
         is_lmdb = False
         if dataset.get("dataroot_GT", None) is not None:
             dataset["dataroot_GT"] = osp.expanduser(dataset["dataroot_GT"])
+            if not osp.isabs(dataset["dataroot_GT"]):
+                dataset["dataroot_GT"] = osp.join(opt["path"]["root"], dataset["dataroot_GT"])
             if dataset["dataroot_GT"].endswith("lmdb"):
                 is_lmdb = True
         # if dataset.get('dataroot_GT_bg', None) is not None:
         #     dataset['dataroot_GT_bg'] = osp.expanduser(dataset['dataroot_GT_bg'])
         if dataset.get("dataroot_LQ", None) is not None:
             dataset["dataroot_LQ"] = osp.expanduser(dataset["dataroot_LQ"])
+            if not osp.isabs(dataset["dataroot_LQ"]):
+                dataset["dataroot_LQ"] = osp.join(opt["path"]["root"], dataset["dataroot_LQ"])
             if dataset["dataroot_LQ"].endswith("lmdb"):
                 is_lmdb = True
         dataset["data_type"] = "lmdb" if is_lmdb else "img"
@@ -61,9 +74,9 @@ def parse(opt_path, is_train=True):
     for key, path in opt["path"].items():
         if path and key in opt["path"] and key != "strict_load":
             opt["path"][key] = osp.expanduser(path)
-    opt["path"]["root"] = osp.abspath(
-        osp.join(__file__, osp.pardir, osp.pardir, osp.pardir, osp.pardir)
-    )
+            if not osp.isabs(opt["path"][key]):
+                opt["path"][key] = osp.join(opt["path"]["root"], opt["path"][key])
+    
     path = osp.abspath(__file__)
     # print(111, path)
     # config_dir = path.split("/")[-2]

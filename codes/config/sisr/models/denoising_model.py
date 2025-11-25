@@ -39,7 +39,8 @@ class DenoisingModel(BaseModel):
                 self.model, device_ids=[torch.cuda.current_device()]
             )
         else:
-            self.model = DataParallel(self.model)
+            if opt["gpu_ids"] is not None:
+                self.model = DataParallel(self.model)
         # print network
         # self.print_network()
         self.load()

@@ -1,0 +1,40 @@
+name: custom_inference
+suffix: ~  # add suffix to saved images
+model: denoising
+distortion: sr
+gpu_ids: [0]
+
+sde:
+  max_sigma: 50
+  T: 100
+  schedule: cosine # linear, cosine
+  eps: 0.005
+  
+degradation:
+  # for denoising
+  sigma: 25
+  noise_type: G # Gaussian noise: G
+
+  # for super-resolution
+  scale: 4
+
+#### path
+path:
+  pretrain_model_G: experiments/sisr/ediffsr/180000_G.pth
+  # results_root will be automatically set to results/sisr/custom_inference
+  results_root: results
+
+datasets:
+  test_1:
+    name: CustomImage
+    mode: LQ
+    dataroot_LQ: inputs
+
+#### network structures
+network_G:
+  which_model_G: ConditionalNAFNet
+  setting:
+    width: 64
+    enc_blk_nums: [14, 1, 1, 1]
+    middle_blk_num: 1
+    dec_blk_nums: [1, 1, 1, 1]

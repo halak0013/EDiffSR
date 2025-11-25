@@ -1,5 +1,4 @@
 import os
-os.environ['CUDA_VISIBLE_DEVICES']='1'
 import argparse
 import logging
 import os.path
@@ -10,7 +9,7 @@ import torchvision.utils as tvutils
 
 import numpy as np
 import torch
-from IPython import embed
+# from IPython import embed
 ##import lpips
 
 import options as option
@@ -96,12 +95,13 @@ for test_loader in test_loaders:
         single_img_ssim = []
         single_img_psnr_y = []
         single_img_ssim_y = []
-        need_GT = False if test_loader.dataset.opt["dataroot_GT"] is None else True
+        need_GT = False if test_loader.dataset.opt.get("dataroot_GT") is None else True
         img_path = test_data["GT_path"][0] if need_GT else test_data["LQ_path"][0]
         img_name = os.path.splitext(os.path.basename(img_path))[0]
 
         #### input dataset_LQ
-        LQ, GT = test_data["LQ"], test_data["GT"]
+        LQ = test_data["LQ"]
+        GT = test_data["GT"] if need_GT else None
         LQ = util.upscale(LQ, scale)
         noisy_state = sde.noise_state(LQ)
 
@@ -111,11 +111,12 @@ for test_loader in test_loaders:
         toc = time.time()
         test_times.append(toc - tic)
 
-        visuals = model.get_current_visuals()
+        visuals = model.get_current_visuals(need_GT=need_GT)
         SR_img = visuals["Output"]
         output = util.tensor2img(SR_img.squeeze())  # uint8
         LQ_ = util.tensor2img(visuals["Input"].squeeze())  # uint8
-        GT_ = util.tensor2img(visuals["GT"].squeeze())  # uint8
+        if need_GT:
+            GT_ = util.tensor2img(visuals["GT"].squeeze())  # uint8
         
         suffix = opt["suffix"]
         if suffix:
