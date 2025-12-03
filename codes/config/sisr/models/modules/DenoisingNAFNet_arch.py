@@ -180,7 +180,7 @@ class ConditionalNAFNet(nn.Module):
 
         self.intro = nn.Conv2d(in_channels=img_channel*2, out_channels=width, kernel_size=3, padding=1, stride=1, groups=1,
                               bias=True)
-        self.enhance = RCAB(num_feat=width)
+        # self.enhance = RCAB(num_feat=width)
 
         self.ending = nn.Conv2d(in_channels=width, out_channels=img_channel, kernel_size=3, padding=1, stride=1, groups=1,
                               bias=True)
@@ -241,7 +241,7 @@ class ConditionalNAFNet(nn.Module):
         x = self.intro(x)
 
         # RCAB enhance
-        x = x + self.enhance(x)
+        # x = x + self.enhance(x)
 
         encs = []
 
